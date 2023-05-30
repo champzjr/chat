@@ -178,32 +178,32 @@
 <script>
 import { mapGetters } from 'vuex';
 
-import ConversationAdvancedFilter from './widgets/conversation/ConversationAdvancedFilter';
-import ConversationBasicFilter from './widgets/conversation/ConversationBasicFilter';
-import ChatTypeTabs from './widgets/ChatTypeTabs';
-import ConversationCard from './widgets/conversation/ConversationCard';
-import timeMixin from '../mixins/time';
-import eventListenerMixins from 'shared/mixins/eventListenerMixins';
-import conversationMixin from '../mixins/conversations';
 import wootConstants from 'dashboard/constants/globals';
-import advancedFilterTypes from './widgets/conversation/advancedFilterItems';
-import filterQueryGenerator from '../helper/filterQueryGenerator.js';
 import AddCustomViews from 'dashboard/routes/dashboard/customviews/AddCustomViews';
 import DeleteCustomViews from 'dashboard/routes/dashboard/customviews/DeleteCustomViews.vue';
-import ConversationBulkActions from './widgets/conversation/conversationBulkActions/Index.vue';
 import alertMixin from 'shared/mixins/alertMixin';
+import eventListenerMixins from 'shared/mixins/eventListenerMixins';
 import filterMixin from 'shared/mixins/filterMixin';
+import filterQueryGenerator from '../helper/filterQueryGenerator.js';
+import conversationMixin from '../mixins/conversations';
+import timeMixin from '../mixins/time';
+import ChatTypeTabs from './widgets/ChatTypeTabs';
+import ConversationAdvancedFilter from './widgets/conversation/ConversationAdvancedFilter';
+import ConversationBasicFilter from './widgets/conversation/ConversationBasicFilter';
+import ConversationCard from './widgets/conversation/ConversationCard';
+import advancedFilterTypes from './widgets/conversation/advancedFilterItems';
+import ConversationBulkActions from './widgets/conversation/conversationBulkActions/Index.vue';
 
 import {
-  hasPressedAltAndJKey,
-  hasPressedAltAndKKey,
+hasPressedAltAndJKey,
+hasPressedAltAndKKey,
 } from 'shared/helpers/KeyboardHelpers';
+import { CONVERSATION_EVENTS } from '../helper/AnalyticsHelper/events';
 import { conversationListPageURL } from '../helper/URLHelper';
 import {
-  isOnMentionsView,
-  isOnUnattendedView,
+isOnMentionsView,
+isOnUnattendedView,
 } from '../store/modules/conversations/helpers/actionHelpers';
-import { CONVERSATION_EVENTS } from '../helper/AnalyticsHelper/events';
 
 export default {
   components: {
@@ -276,6 +276,7 @@ export default {
   },
   computed: {
     ...mapGetters({
+      currentUserRole: 'getCurrentRole',
       currentChat: 'getSelectedChat',
       currentUser: 'getCurrentUser',
       chatLists: 'getAllConversations',
@@ -313,6 +314,24 @@ export default {
         !this.chatListLoading
       );
     },
+    showEndOfListMessage() {
+      return (
+        this.conversationList.length &&
+        this.hasCurrentPageEndReached &&
+        !this.chatListLoading
+      );
+    },
+    const isAvailableForTheUser = this.currentUserRole === 'administrator' ? true : false;
+      if (isAvailableForTheUser) {
+          ASSIGNEE_TYPE_TAB_KEYS.all = 'allCount';
+      }
+    currentUserDetails() {
+      const { id, name } = this.currentUser;
+      return {
+        id,
+        name,
+      };
+    },
     currentUserDetails() {
       const { id, name } = this.currentUser;
       return {
@@ -324,7 +343,7 @@ export default {
       const ASSIGNEE_TYPE_TAB_KEYS = {
         me: 'mineCount',
         unassigned: 'unAssignedCount',
-        all: 'allCount',
+        //all: 'allCount',
       };
       return Object.keys(ASSIGNEE_TYPE_TAB_KEYS).map(key => {
         const count = this.conversationStats[ASSIGNEE_TYPE_TAB_KEYS[key]] || 0;
@@ -521,6 +540,10 @@ export default {
       this.showDeleteFoldersModal = false;
     },
     onToggleAdvanceFiltersModal() {
+      if(this.currentUserRole === 'agent'){
+        this.showAdvancedFilters = false;
+      return;
+      }
       if (!this.hasAppliedFilters) {
         this.initializeExistingFilterToModal();
       }
